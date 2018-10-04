@@ -6,6 +6,7 @@
 
 import sys
 import datetime
+import math
 
 
 # Calculamos la correcion de tipo TONAL.
@@ -72,18 +73,20 @@ def Check_Max_Correction(Kt, Kf, Ki):
         return Kt + Kf + Ki
 
 def restar_hora(hora1,hora2):
-    formato = "%H:%M"
+    formato = "%H:%M:%S"
     h1 = datetime.datetime.strptime(hora1, formato)
     h2 = datetime.datetime.strptime(hora2, formato)
     resultado = h2 - h1
     return str(resultado)
 
+#Correcion del Leq por ruido de fondo LeqF representa el Lequivalente de fondo
 def Calc_Background_Noise(Leq, LeqF):
     difLeq = Leq- LeqF
     if difLeq >= 15:
-        return 0
+        return Leq
     else:
-        return difLeq
+        Leq = (10*(math.log10((10**(Leq/10))-(10**(LeqF/10)))))
+        return Leq
 
 if __name__ == "__main__":
 
@@ -106,16 +109,16 @@ if __name__ == "__main__":
     _LAIeqF = float(input())
 
     #Recogida de tiempo de medidasself.
-    print("Introduzca hora exacta(HH:mm) del comienzo de la medida")
+    print("Introduzca hora exacta(HH:mm:ss) del comienzo de la medida")
     h1 = input()
-    print("Introduzca hora exacta(HH:mm) del final de la medida")
+    print("Introduzca hora exacta(HH:mm:ss) del final de la medida")
     h2 = input()
     tiempo_medida = restar_hora(h1, h2)
 
     #Calcular ruido de fondo
-    LAeqF = Calc_Background_Noise(_LAeq, _LAeqF)
-    LCeqF = Calc_Background_Noise(_LCeq, _LCeqF)
-    LAIeqF = Calc_Background_Noise(_LAIeq, _LAIeqF)
+    _LAeq = Calc_Background_Noise(_LAeq, _LAeqF)
+    _LCeq = Calc_Background_Noise(_LCeq, _LCeqF)
+    _LAIeq = Calc_Background_Noise(_LAIeq, _LAIeqF)
 
     #Calculos de las correcciones.
     print("¿Hay correcion tonal? s/n")
@@ -128,4 +131,5 @@ if __name__ == "__main__":
 
     T_Correction = Check_Max_Correction(Kt, Kf, Ki)
 
-    print("Correccion Total: ", T_Correction)
+    _LAeqK = math.trunc(_LAeq + T_Correction + 0.5)
+    print("LAeqk Total: ", _LAeqK, "dBA")
