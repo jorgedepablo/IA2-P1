@@ -1,11 +1,6 @@
-########################################
-###Datos necesarios de entrada: LAeq,T, LCeq,T, LAIeq,T
-###
-###
-#########################################
 
-import sys
-import datetime
+########################################
+#Herramienta para calcular las correciones de
 import math
 
 
@@ -64,21 +59,12 @@ def calc_Ki(LAIeq, LAeq):
         Li = 6
 
     return Li
-
 # Comprueba que el maximo de las correcciones sea 9dB
 def Check_Max_Correction(Kt, Kf, Ki):
     if Kt + Kf + Ki > 9:
         return 9
     else:
         return Kt + Kf + Ki
-
-def restar_hora(hora1,hora2):
-    formato = "%H:%M:%S"
-    h1 = datetime.datetime.strptime(hora1, formato)
-    h2 = datetime.datetime.strptime(hora2, formato)
-    resultado = h2 - h1
-    return str(resultado)
-
 #Correcion del Leq por ruido de fondo LeqF representa el Lequivalente de fondo
 def Calc_Background_Noise(Leq, LeqF):
     difLeq = Leq- LeqF
@@ -87,6 +73,40 @@ def Calc_Background_Noise(Leq, LeqF):
     else:
         Leq = (10*(math.log10((10**(Leq/10))-(10**(LeqF/10)))))
         return Leq
+#Recoge por teclado el tipo de area acústica donde se realizan las mediciones
+def take_area():
+    print('Ahora seleccione el tipo de área acústica donde ha realizado las mediciones:')
+    print('1: Suelo uso sanitario, docente y cultural que que requiera una especial proteción contra la contaminación acústica')
+    print('2: Suelo de uso residencial')
+    print('3: Suelo de uso terciario distinto del contemplado en el 4')
+    print('4: Suelo de uso recreativo y espectaculos')
+    print('5: Suelo de uso industrial')
+    area = int(input())
+    return area
+
+def check_value(escenario, Leq):
+    if escenario == 1:
+        Lim1 = 40 + 5
+        Lim2 = 50 + 5
+    if  escenario == 2:
+        Lim1 = 45 + 5
+        Lim2 = 55 + 5
+    if  escenario == 3:
+        Lim1 = 50 + 5
+        Lim2 = 60 + 5
+    if escenario == 4:
+        Lim1 = 53 + 5
+        Lim2 = 63 + 5
+    if escenario == 5:
+        Lim1 = 55 + 5
+        Lim2 = 65 + 5
+    if Leq > Lim1:
+        print('No cumple para periodo noche')
+        if Leq > Lim2:
+            print('No cumple para periodo día y tarde')
+    else:
+        print('Sí que cumple')
+
 
 if __name__ == "__main__":
 
@@ -108,13 +128,6 @@ if __name__ == "__main__":
     print("Introduzca el Nivel equivalente ponderado A con la constante temporal impulsivo (I)")
     _LAIeqF = float(input())
 
-    #Recogida de tiempo de medidasself.
-    print("Introduzca hora exacta(HH:mm:ss) del comienzo de la medida")
-    h1 = input()
-    print("Introduzca hora exacta(HH:mm:ss) del final de la medida")
-    h2 = input()
-    tiempo_medida = restar_hora(h1, h2)
-
     #Calcular ruido de fondo
     _LAeq = Calc_Background_Noise(_LAeq, _LAeqF)
     _LCeq = Calc_Background_Noise(_LCeq, _LCeqF)
@@ -130,6 +143,8 @@ if __name__ == "__main__":
     Ki = calc_Ki(_LAIeq, _LAeq)
 
     T_Correction = Check_Max_Correction(Kt, Kf, Ki)
-
     _LAeqK = math.trunc(_LAeq + T_Correction + 0.5)
+    area = take_area()
+    check_value(area, _LAeqK)
     print("LAeqk Total: ", _LAeqK, "dBA")
+    print('Valor de correciones: ', T_Correction)
